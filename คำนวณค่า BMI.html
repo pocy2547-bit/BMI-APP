@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>คำนวณค่า BMI</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EAF4FF; --card:#FFFFFF; --ink:#0F2A4A; --muted:#5B7594;
+  --blue:#2F80ED; --blue-d:#1B5FC1; --line:#D3E4F8; --field:#F5FAFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1B30; --card:#122640; --ink:#EAF4FF; --muted:#9DB6D3; --line:#24405F; --field:#0F2138;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1B30; --card:#122640; --ink:#EAF4FF; --muted:#9DB6D3; --line:#24405F; --field:#0F2138;
+}
+html{height:100%}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100%; background:var(--bg); color:var(--ink);
+  font-family:'Prompt',system-ui,'Noto Sans Thai',sans-serif;
+  display:flex; justify-content:center; padding:24px 16px;
+}
+.app{width:100%; max-width:420px}
+h1{font-size:1.5rem; margin:8px 0 4px; font-weight:600}
+.sub{color:var(--muted); margin:0 0 20px; font-size:.95rem}
+.card{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:20px}
+.seg{display:flex; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:4px; margin-bottom:16px}
+.seg button{flex:1; border:0; background:transparent; color:var(--muted); font:inherit; padding:8px; border-radius:9px; cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--blue); color:#fff}
+label{display:block; font-size:.9rem; color:var(--muted); margin:0 0 6px}
+.field{margin-bottom:14px}
+.input{display:flex; align-items:center; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:0 14px}
+.input:focus-within{border-color:var(--blue); outline:2px solid color-mix(in srgb,var(--blue) 30%,transparent)}
+.input input{flex:1; min-width:0; border:0; background:transparent; font:inherit; font-size:1.2rem; color:var(--ink); padding:12px 0; outline:none}
+.input span{color:var(--muted)}
+.row{display:flex; gap:10px; margin-top:6px}
+.btn{flex:1; border:0; border-radius:12px; padding:13px; font:inherit; font-weight:500; cursor:pointer}
+.btn.primary{background:var(--blue); color:#fff}
+.btn.primary:hover{background:var(--blue-d)}
+.btn.ghost{background:var(--field); color:var(--ink); border:1px solid var(--line); flex:0 0 auto; padding:13px 18px}
+.btn:focus-visible,.seg button:focus-visible{outline:3px solid var(--blue-d); outline-offset:2px}
+.err{color:#D14343; font-size:.9rem; min-height:1.2em; margin:0 0 6px}
+.result{margin-top:18px; display:none}
+.result.show{display:block}
+.value{font-size:3.4rem; font-weight:600; line-height:1; color:var(--blue); margin:0}
+.cat{display:inline-block; margin:10px 0 4px; padding:4px 12px; border-radius:99px; font-weight:500; font-size:.95rem; color:#fff; background:var(--blue)}
+.tip{color:var(--muted); font-size:.92rem; margin:6px 0 16px}
+.scale{position:relative; height:12px; border-radius:99px; display:flex; overflow:hidden}
+.scale i{display:block; height:100%}
+.pin{position:absolute; top:-4px; width:4px; height:20px; background:var(--ink); border-radius:2px; transform:translateX(-2px); transition:left .5s ease}
+.legend{display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); margin-top:8px}
+.tbl{margin-top:20px; font-size:.88rem; color:var(--muted)}
+.tbl div{display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line)}
+.tbl div.on{color:var(--ink); font-weight:600}
+.note{font-size:.78rem; color:var(--muted); text-align:center; margin-top:16px}
+@media (prefers-reduced-motion: reduce){.pin{transition:none}}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>คำนวณค่า BMI</h1>
+  <p class="sub">ดัชนีมวลกาย ใส่น้ำหนักและส่วนสูง แล้วดูผลได้ทันที</p>
+
+  <section class="card">
+    <div class="seg" role="group" aria-label="หน่วย">
+      <button id="u-metric" aria-pressed="true">กก. / ซม.</button>
+      <button id="u-imp" aria-pressed="false">ปอนด์ / นิ้ว</button>
+    </div>
+
+    <div class="field">
+      <label for="w" id="wl">น้ำหนัก</label>
+      <div class="input"><input id="w" type="number" inputmode="decimal" min="0" step="0.1" placeholder="เช่น 60"><span id="wu">กก.</span></div>
+    </div>
+    <div class="field">
+      <label for="h" id="hl">ส่วนสูง</label>
+      <div class="input"><input id="h" type="number" inputmode="decimal" min="0" step="0.1" placeholder="เช่น 165"><span id="hu">ซม.</span></div>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+
+    <div class="row">
+      <button class="btn primary" id="calc">คำนวณ BMI</button>
+      <button class="btn ghost" id="reset">ล้างค่า</button>
+    </div>
+
+    <div class="result" id="res" aria-live="polite">
+      <p class="value" id="val">0</p>
+      <span class="cat" id="cat">-</span>
+      <p class="tip" id="tip"></p>
+      <div class="scale" id="scale">
+        <i style="width:18.5%;background:#7FB8FF"></i>
+        <i style="width:23%;background:#4CC38A"></i>
+        <i style="width:16%;background:#F5C84C"></i>
+        <i style="width:42.5%;background:#EF7B6B"></i>
+        <b class="pin" id="pin" style="left:0"></b>
+      </div>
+      <div class="legend"><span>15</span><span>18.5</span><span>23</span><span>25</span><span>40</span></div>
+
+      <div class="tbl" id="tbl">
+        <div data-k="0"><span>น้ำหนักต่ำกว่าเกณฑ์</span><span>&lt; 18.5</span></div>
+        <div data-k="1"><span>ปกติ (สมส่วน)</span><span>18.5 – 22.9</span></div>
+        <div data-k="2"><span>น้ำหนักเกิน</span><span>23 – 24.9</span></div>
+        <div data-k="3"><span>โรคอ้วน</span><span>≥ 25</span></div>
+      </div>
+    </div>
+  </section>
+  <p class="note">เกณฑ์ตามมาตรฐานเอเชีย (WHO Asia-Pacific) ใช้เป็นข้อมูลเบื้องต้นเท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์</p>
+</main>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var imp=false;
+  var cats=[
+    {n:"น้ำหนักต่ำกว่าเกณฑ์",c:"#4A9BF5",t:"ควรรับประทานอาหารให้ครบ 5 หมู่ และปรึกษาแพทย์หากน้ำหนักลดโดยไม่ทราบสาเหตุ"},
+    {n:"ปกติ (สมส่วน)",c:"#2FA36B",t:"อยู่ในเกณฑ์ดีแล้ว รักษาด้วยการกินอาหารสมดุลและออกกำลังกายสม่ำเสมอ"},
+    {n:"น้ำหนักเกิน",c:"#D9A21B",t:"ลองปรับอาหารและเพิ่มการเคลื่อนไหวในชีวิตประจำวัน เพื่อไม่ให้น้ำหนักเพิ่มต่อ"},
+    {n:"โรคอ้วน",c:"#E2604F",t:"ควรวางแผนลดน้ำหนักอย่างค่อยเป็นค่อยไป และปรึกษาแพทย์หรือนักโภชนาการ"}
+  ];
+  function setUnit(v){
+    imp=v;
+    $("u-metric").setAttribute("aria-pressed",String(!v));
+    $("u-imp").setAttribute("aria-pressed",String(v));
+    $("wu").textContent=v?"ปอนด์":"กก.";
+    $("hu").textContent=v?"นิ้ว":"ซม.";
+    $("w").placeholder=v?"เช่น 132":"เช่น 60";
+    $("h").placeholder=v?"เช่น 65":"เช่น 165";
+    $("w").value="";$("h").value="";clearAll();
+  }
+  function clearAll(){$("err").textContent="";$("res").classList.remove("show")}
+  function calc(){
+    var w=parseFloat($("w").value),h=parseFloat($("h").value);
+    if(!(w>0)||!(h>0)){$("err").textContent="กรอกน้ำหนักและส่วนสูงเป็นตัวเลขที่มากกว่า 0";$("res").classList.remove("show");return}
+    var kg=imp?w*0.45359237:w, m=imp?h*0.0254:h/100;
+    if(m<0.5||m>2.6||kg<10||kg>500){$("err").textContent="ค่าที่กรอกอยู่นอกช่วงปกติ กรุณาตรวจสอบหน่วยอีกครั้ง";$("res").classList.remove("show");return}
+    $("err").textContent="";
+    var b=kg/(m*m);
+    var k=b<18.5?0:b<23?1:b<25?2:3;
+    $("val").textContent=b.toFixed(1);
+    var c=cats[k];
+    $("cat").textContent=c.n;$("cat").style.background=c.c;
+    $("tip").textContent=c.t;
+    var p=Math.max(0,Math.min(100,(b-15)/(40-15)*100));
+    $("pin").style.left=p+"%";
+    [].forEach.call($("tbl").children,function(r){r.classList.toggle("on",+r.dataset.k===k)});
+    $("res").classList.add("show");
+  }
+  $("u-metric").onclick=function(){setUnit(false)};
+  $("u-imp").onclick=function(){setUnit(true)};
+  $("calc").onclick=calc;
+  $("reset").onclick=function(){$("w").value="";$("h").value="";clearAll();$("w").focus()};
+  ["w","h"].forEach(function(i){$(i).addEventListener("keydown",function(e){if(e.key==="Enter")calc()})});
+})();
+</script>
+</body>
+</html>
