@@ -60,6 +60,20 @@ label{display:block; font-size:.9rem; color:var(--muted); margin:0 0 6px}
 .tbl div{display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line)}
 .tbl div.on{color:var(--ink); font-weight:600}
 .note{font-size:.78rem; color:var(--muted); text-align:center; margin-top:16px}
+.hist{margin-top:16px}
+.hhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+.hhead h2{font-size:1.05rem; margin:0; font-weight:600}
+.hhead small{color:var(--muted)}
+.hist ul{list-style:none; margin:0; padding:0}
+.hist li{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line)}
+.hist li:last-child{border-bottom:0}
+.dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto}
+.hm{flex:1; min-width:0}
+.hm b{display:block; font-weight:500}
+.hm small{display:block; color:var(--muted); font-size:.8rem}
+.hempty{color:var(--muted); font-size:.9rem; margin:4px 0 2px}
+.hclear{border:0; background:transparent; color:var(--blue); font:inherit; font-size:.88rem; cursor:pointer; padding:8px 0 0}
+.hclear:focus-visible{outline:3px solid var(--blue-d); outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.pin{transition:none}}
 </style>
 </head>
@@ -110,6 +124,12 @@ label{display:block; font-size:.9rem; color:var(--muted); margin:0 0 6px}
       </div>
     </div>
   </section>
+  <section class="card hist" aria-label="ประวัติการคำนวณ">
+    <div class="hhead"><h2>ประวัติการคำนวณ</h2><small id="hcount">0/10</small></div>
+    <p class="hempty" id="hempty">ยังไม่มีประวัติ ลองคำนวณ BMI ครั้งแรกได้เลย</p>
+    <ul id="hlist"></ul>
+    <button class="hclear" id="hclear" style="display:none">ล้างประวัติทั้งหมด</button>
+  </section>
   <p class="note">เกณฑ์ตามมาตรฐานเอเชีย (WHO Asia-Pacific) ใช้เป็นข้อมูลเบื้องต้นเท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์</p>
 </main>
 
@@ -150,7 +170,31 @@ label{display:block; font-size:.9rem; color:var(--muted); margin:0 0 6px}
     $("pin").style.left=p+"%";
     [].forEach.call($("tbl").children,function(r){r.classList.toggle("on",+r.dataset.k===k)});
     $("res").classList.add("show");
+    addHist({b:b,k:k,w:w,h:h,wu:$("wu").textContent,hu:$("hu").textContent,t:Date.now()});
   }
+  var KEY="bmi-history",MAX=10;
+  function load(){try{var a=JSON.parse(localStorage.getItem(KEY));return Array.isArray(a)?a.slice(0,MAX):[]}catch(e){return []}}
+  function store(){try{localStorage.setItem(KEY,JSON.stringify(hist))}catch(e){}}
+  var hist=load();
+  function fmt(t){try{return new Date(t).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return ""}}
+  function mk(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!=null)n.textContent=txt;return n}
+  function renderHist(){
+    var ul=$("hlist");ul.innerHTML="";
+    $("hcount").textContent=hist.length+"/"+MAX;
+    $("hempty").style.display=hist.length?"none":"block";
+    $("hclear").style.display=hist.length?"":"none";
+    hist.forEach(function(e){
+      if(!cats[e.k])return;
+      var li=document.createElement("li"),d=mk("i","dot"),m=mk("div","hm");
+      d.style.background=cats[e.k].c;
+      m.appendChild(mk("b","",Number(e.b).toFixed(1)+"  "+cats[e.k].n));
+      m.appendChild(mk("small","",e.w+" "+e.wu+" / "+e.h+" "+e.hu+"  "+fmt(e.t)));
+      li.appendChild(d);li.appendChild(m);ul.appendChild(li);
+    });
+  }
+  function addHist(e){hist.unshift(e);hist=hist.slice(0,MAX);store();renderHist()}
+  $("hclear").onclick=function(){hist=[];store();renderHist()};
+  renderHist();
   $("u-metric").onclick=function(){setUnit(false)};
   $("u-imp").onclick=function(){setUnit(true)};
   $("calc").onclick=calc;
