@@ -1,247 +1,161 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>คำนวณค่า BMI</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#EAF4FF; --card:#FFFFFF; --ink:#0F2A4A; --muted:#5B7594;
-  --blue:#2F80ED; --blue-d:#1B5FC1; --line:#D3E4F8; --field:#F5FAFF;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0B1B30; --card:#122640; --ink:#EAF4FF; --muted:#9DB6D3; --line:#24405F; --field:#0F2138;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0B1B30; --card:#122640; --ink:#EAF4FF; --muted:#9DB6D3; --line:#24405F; --field:#0F2138;
-}
-html{height:100%}
-*{box-sizing:border-box}
-body{
-  margin:0; min-height:100%; background:var(--bg); color:var(--ink);
-  font-family:'Prompt',system-ui,'Noto Sans Thai',sans-serif;
-  display:flex; justify-content:center; padding:24px 16px;
-}
-.app{width:100%; max-width:420px}
-h1{font-size:1.5rem; margin:8px 0 4px; font-weight:600}
-.sub{color:var(--muted); margin:0 0 20px; font-size:.95rem}
-.card{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:20px}
-.seg{display:flex; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:4px; margin-bottom:16px}
-.seg button{flex:1; border:0; background:transparent; color:var(--muted); font:inherit; padding:8px; border-radius:9px; cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--blue); color:#fff}
-label{display:block; font-size:.9rem; color:var(--muted); margin:0 0 6px}
-.field{margin-bottom:14px}
-.input{display:flex; align-items:center; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:0 14px}
-.input:focus-within{border-color:var(--blue); outline:2px solid color-mix(in srgb,var(--blue) 30%,transparent)}
-.input input{flex:1; min-width:0; border:0; background:transparent; font:inherit; font-size:1.2rem; color:var(--ink); padding:12px 0; outline:none}
-.input span{color:var(--muted)}
-.row{display:flex; gap:10px; margin-top:6px}
-.btn{flex:1; border:0; border-radius:12px; padding:13px; font:inherit; font-weight:500; cursor:pointer}
-.btn.primary{background:var(--blue); color:#fff}
-.btn.primary:hover{background:var(--blue-d)}
-.btn.ghost{background:var(--field); color:var(--ink); border:1px solid var(--line); flex:0 0 auto; padding:13px 18px}
-.btn:focus-visible,.seg button:focus-visible{outline:3px solid var(--blue-d); outline-offset:2px}
-.err{color:#D14343; font-size:.9rem; min-height:1.2em; margin:0 0 6px}
-.result{margin-top:18px; display:none}
-.result.show{display:block}
-.value{font-size:3.4rem; font-weight:600; line-height:1; color:var(--blue); margin:0}
-.cat{display:inline-block; margin:10px 0 4px; padding:4px 12px; border-radius:99px; font-weight:500; font-size:.95rem; color:#fff; background:var(--blue)}
-.tip{color:var(--muted); font-size:.92rem; margin:6px 0 16px}
-.risk{display:none; margin:0 0 18px; padding:14px 16px; border-radius:14px; border:1px solid var(--rc,var(--line)); background:color-mix(in srgb,var(--rc,#888) 10%,var(--card))}
-.risk.show{display:block}
-.risk h3{margin:0 0 2px; font-size:1rem; font-weight:600}
-.risk .lv{display:inline-block; margin:0 0 8px; font-size:.82rem; font-weight:500; color:var(--rc)}
-.risk ul{margin:0; padding-left:20px; font-size:.9rem; line-height:1.6}
-.risk p{margin:8px 0 0; font-size:.82rem; color:var(--muted)}
-.scale{position:relative; height:12px; border-radius:99px; display:flex; overflow:hidden}
-.scale i{display:block; height:100%}
-.pin{position:absolute; top:-4px; width:4px; height:20px; background:var(--ink); border-radius:2px; transform:translateX(-2px); transition:left .5s ease}
-.legend{display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); margin-top:8px}
-.tbl{margin-top:20px; font-size:.88rem; color:var(--muted)}
-.tbl div{display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line)}
-.tbl div.on{color:var(--ink); font-weight:600}
-.note{font-size:.78rem; color:var(--muted); text-align:center; margin-top:16px}
-.hist{margin-top:16px}
-.hhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
-.hhead h2{font-size:1.05rem; margin:0; font-weight:600}
-.hhead small{color:var(--muted)}
-.hist ul{list-style:none; margin:0; padding:0}
-.hist li{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line)}
-.hist li:last-child{border-bottom:0}
-.dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto}
-.hm{flex:1; min-width:0}
-.hm b{display:block; font-weight:500}
-.hm small{display:block; color:var(--muted); font-size:.8rem}
-.hempty{color:var(--muted); font-size:.9rem; margin:4px 0 2px}
-.hclear{border:0; background:transparent; color:var(--blue); font:inherit; font-size:.88rem; cursor:pointer; padding:8px 0 0}
-.hclear:focus-visible{outline:3px solid var(--blue-d); outline-offset:2px}
-@media (prefers-reduced-motion: reduce){.pin{transition:none}}
-</style>
-</head>
-<body>
-<main class="app">
-  <h1>คำนวณค่า BMI</h1>
-  <p class="sub">ดัชนีมวลกาย ใส่น้ำหนักและส่วนสูง แล้วดูผลได้ทันที</p>
+/*!
+ * BMI Risk Add-on
+ * แสดงความเสี่ยงโรคเมื่อ BMI อยู่นอกเกณฑ์ปกติ
+ * - ไม่แก้ไขโค้ดเดิม: ดักดูการเปลี่ยนแปลงของ #val, #cat, #res แล้วแทรกการ์ดความเสี่ยงต่อจาก #tip
+ * - ใช้ตัวแปรสีของหน้าเดิม (--card, --ink, --muted, --line, --field) จึงรองรับ dark mode อัตโนมัติ
+ * วิธีใช้: เพิ่มบรรทัดนี้ก่อน </body> (หลัง <script> เดิม)
+ *   <script src="bmi-risk-addon.js"></script>
+ */
+(function () {
+  "use strict";
 
-  <section class="card">
-    <div class="seg" role="group" aria-label="หน่วย">
-      <button id="u-metric" aria-pressed="true">กก. / ซม.</button>
-      <button id="u-imp" aria-pressed="false">ปอนด์ / นิ้ว</button>
-    </div>
-
-    <div class="field">
-      <label for="w" id="wl">น้ำหนัก</label>
-      <div class="input"><input id="w" type="number" inputmode="decimal" min="0" step="0.1" placeholder="เช่น 60"><span id="wu">กก.</span></div>
-    </div>
-    <div class="field">
-      <label for="h" id="hl">ส่วนสูง</label>
-      <div class="input"><input id="h" type="number" inputmode="decimal" min="0" step="0.1" placeholder="เช่น 165"><span id="hu">ซม.</span></div>
-    </div>
-    <p class="err" id="err" role="alert"></p>
-
-    <div class="row">
-      <button class="btn primary" id="calc">คำนวณ BMI</button>
-      <button class="btn ghost" id="reset">ล้างค่า</button>
-    </div>
-
-    <div class="result" id="res" aria-live="polite">
-      <p class="value" id="val">0</p>
-      <span class="cat" id="cat">-</span>
-      <p class="tip" id="tip"></p>
-
-      <div class="risk" id="risk">
-        <h3>โรคที่มีความเสี่ยงเพิ่มขึ้น</h3>
-        <span class="lv" id="rlv"></span>
-        <ul id="rlist"></ul>
-        <p>เป็นความเสี่ยงโดยรวมทางสถิติ ไม่ได้หมายความว่าจะเป็นโรคเหล่านี้แน่นอน</p>
-      </div>
-
-      <div class="scale" id="scale">
-        <i style="width:18.5%;background:#7FB8FF"></i>
-        <i style="width:23%;background:#4CC38A"></i>
-        <i style="width:16%;background:#F5C84C"></i>
-        <i style="width:42.5%;background:#EF7B6B"></i>
-        <b class="pin" id="pin" style="left:0"></b>
-      </div>
-      <div class="legend"><span>15</span><span>18.5</span><span>23</span><span>25</span><span>40</span></div>
-
-      <div class="tbl" id="tbl">
-        <div data-k="0"><span>น้ำหนักต่ำกว่าเกณฑ์</span><span>&lt; 18.5</span></div>
-        <div data-k="1"><span>ปกติ (สมส่วน)</span><span>18.5 – 22.9</span></div>
-        <div data-k="2"><span>น้ำหนักเกิน</span><span>23 – 24.9</span></div>
-        <div data-k="3"><span>โรคอ้วน</span><span>≥ 25</span></div>
-      </div>
-    </div>
-  </section>
-  <section class="card hist" aria-label="ประวัติการคำนวณ">
-    <div class="hhead"><h2>ประวัติการคำนวณ</h2><small id="hcount">0/10</small></div>
-    <p class="hempty" id="hempty">ยังไม่มีประวัติ ลองคำนวณ BMI ครั้งแรกได้เลย</p>
-    <ul id="hlist"></ul>
-    <button class="hclear" id="hclear" style="display:none">ล้างประวัติทั้งหมด</button>
-  </section>
-  <p class="note">เกณฑ์ตามมาตรฐานเอเชีย (WHO Asia-Pacific) ใช้เป็นข้อมูลเบื้องต้นเท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์</p>
-</main>
-
-<script>
-(function(){
-  var $=function(i){return document.getElementById(i)};
-  var imp=false;
-  var cats=[
-    {n:"น้ำหนักต่ำกว่าเกณฑ์",c:"#4A9BF5",t:"ควรรับประทานอาหารให้ครบ 5 หมู่ และปรึกษาแพทย์หากน้ำหนักลดโดยไม่ทราบสาเหตุ"},
-    {n:"ปกติ (สมส่วน)",c:"#2FA36B",t:"อยู่ในเกณฑ์ดีแล้ว รักษาด้วยการกินอาหารสมดุลและออกกำลังกายสม่ำเสมอ"},
-    {n:"น้ำหนักเกิน",c:"#D9A21B",t:"ลองปรับอาหารและเพิ่มการเคลื่อนไหวในชีวิตประจำวัน เพื่อไม่ให้น้ำหนักเพิ่มต่อ"},
-    {n:"โรคอ้วน",c:"#E2604F",t:"ควรวางแผนลดน้ำหนักอย่างค่อยเป็นค่อยไป และปรึกษาแพทย์หรือนักโภชนาการ"}
-  ];
-  var risks={
-    0:{lv:"ระดับความเสี่ยง: เพิ่มขึ้น (ขาดสารอาหาร)",c:"#4A9BF5",l:[
-      "ภาวะขาดสารอาหารและโลหิตจาง","ภูมิคุ้มกันต่ำ ติดเชื้อง่าย",
-      "โรคกระดูกพรุน กระดูกหักง่าย","ประจำเดือนผิดปกติและมีบุตรยากในผู้หญิง"]},
-    2:{lv:"ระดับความเสี่ยง: เพิ่มขึ้นเล็กน้อย",c:"#D9A21B",l:[
-      "เบาหวานชนิดที่ 2","ความดันโลหิตสูง",
-      "ไขมันในเลือดสูง","ข้อเข่าเสื่อม"]},
-    3:{lv:"ระดับความเสี่ยง: สูง",c:"#E2604F",l:[
-      "เบาหวานชนิดที่ 2","ความดันโลหิตสูง","ไขมันในเลือดสูง",
-      "โรคหัวใจและหลอดเลือด รวมถึงโรคหลอดเลือดสมอง",
-      "ภาวะหยุดหายใจขณะหลับ","ไขมันพอกตับ และโรคข้อเข่าเสื่อม"]},
-    4:{lv:"ระดับความเสี่ยง: สูงมาก (BMI ≥ 30)",c:"#C0392B",l:[
-      "เบาหวานชนิดที่ 2","ความดันโลหิตสูง","ไขมันในเลือดสูง",
-      "โรคหัวใจและหลอดเลือด รวมถึงโรคหลอดเลือดสมอง",
-      "ภาวะหยุดหายใจขณะหลับ","ไขมันพอกตับและตับอักเสบ",
-      "ข้อเสื่อม และมะเร็งบางชนิด"]}
+  // ---------- ข้อมูลความเสี่ยง (เกณฑ์เอเชีย-แปซิฟิก) ----------
+  var RISKS = {
+    "น้ำหนักต่ำกว่าเกณฑ์": {
+      level: "ความเสี่ยงจากการขาดสารอาหาร",
+      color: "#4A9BF5",
+      title: "ความเสี่ยงโรคที่อาจพบได้",
+      items: [
+        "ภูมิคุ้มกันต่ำ ติดเชื้อง่าย เจ็บป่วยบ่อย",
+        "ภาวะโลหิตจางและขาดสารอาหาร",
+        "โรคกระดูกพรุน กระดูกหักง่าย",
+        "ประจำเดือนผิดปกติ และมีบุตรยาก",
+        "กล้ามเนื้อลีบ อ่อนเพลีย แผลหายช้า"
+      ]
+    },
+    "น้ำหนักเกิน": {
+      level: "ความเสี่ยงเพิ่มขึ้นเล็กน้อย",
+      color: "#D9A21B",
+      title: "ความเสี่ยงโรคที่เพิ่มขึ้น",
+      items: [
+        "เบาหวานชนิดที่ 2",
+        "ความดันโลหิตสูง",
+        "ไขมันในเลือดสูง (คอเลสเตอรอล/ไตรกลีเซอไรด์)",
+        "ไขมันพอกตับ",
+        "ข้อเข่าเสื่อม ปวดหลัง"
+      ]
+    },
+    "อ้วน1": {
+      level: "ความเสี่ยงสูง",
+      color: "#E2604F",
+      title: "ความเสี่ยงโรคที่สูงขึ้น (อ้วนระดับ 1)",
+      items: [
+        "เบาหวานชนิดที่ 2 และภาวะดื้ออินซูลิน",
+        "ความดันโลหิตสูง โรคหัวใจและหลอดเลือด",
+        "ไขมันในเลือดผิดปกติ ไขมันพอกตับ",
+        "ภาวะหยุดหายใจขณะหลับ",
+        "ข้อเสื่อม นิ่วในถุงน้ำดี"
+      ]
+    },
+    "อ้วน2": {
+      level: "ความเสี่ยงสูงมาก",
+      color: "#C0392B",
+      title: "ความเสี่ยงโรคที่สูงมาก (อ้วนระดับ 2)",
+      items: [
+        "โรคหัวใจขาดเลือด หัวใจล้มเหลว และโรคหลอดเลือดสมอง",
+        "เบาหวานชนิดที่ 2 และภาวะแทรกซ้อน",
+        "ภาวะหยุดหายใจขณะหลับรุนแรง",
+        "ตับอักเสบจากไขมัน (NASH) และตับแข็ง",
+        "มะเร็งบางชนิด เช่น ลำไส้ใหญ่ เต้านม มดลูก",
+        "ข้อเสื่อมรุนแรง และภาวะมีบุตรยาก"
+      ]
+    }
   };
-  function setUnit(v){
-    imp=v;
-    $("u-metric").setAttribute("aria-pressed",String(!v));
-    $("u-imp").setAttribute("aria-pressed",String(v));
-    $("wu").textContent=v?"ปอนด์":"กก.";
-    $("hu").textContent=v?"นิ้ว":"ซม.";
-    $("w").placeholder=v?"เช่น 132":"เช่น 60";
-    $("h").placeholder=v?"เช่น 65":"เช่น 165";
-    $("w").value="";$("h").value="";clearAll();
+
+  var BOX_ID = "bmi-risk-box";
+
+  // ---------- CSS ----------
+  function injectStyle() {
+    if (document.getElementById("bmi-risk-style")) return;
+    var s = document.createElement("style");
+    s.id = "bmi-risk-style";
+    s.textContent =
+      "#" + BOX_ID + "{margin:4px 0 16px;padding:14px 16px;border-radius:14px;" +
+      "background:var(--field,#F5FAFF);border:1px solid var(--line,#D3E4F8);" +
+      "border-left:6px solid var(--risk-c,#E2604F);color:var(--ink,#0F2A4A)}" +
+      "#" + BOX_ID + " .rk-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px}" +
+      "#" + BOX_ID + " .rk-title{margin:0;font-size:.98rem;font-weight:600}" +
+      "#" + BOX_ID + " .rk-lv{display:inline-block;padding:2px 10px;border-radius:99px;" +
+      "font-size:.8rem;font-weight:500;color:#fff;background:var(--risk-c,#E2604F)}" +
+      "#" + BOX_ID + " ul{margin:0;padding-left:20px;font-size:.9rem;line-height:1.7}" +
+      "#" + BOX_ID + " .rk-note{margin:10px 0 0;font-size:.78rem;color:var(--muted,#5B7594)}";
+    document.head.appendChild(s);
   }
-  function clearAll(){$("err").textContent="";$("res").classList.remove("show")}
-  function showRisk(b,k){
-    var box=$("risk"),r=risks[k===3&&b>=30?4:k];
-    if(!r){box.classList.remove("show");return}
-    box.style.setProperty("--rc",r.c);
-    $("rlv").textContent=r.lv;
-    var ul=$("rlist");ul.innerHTML="";
-    r.l.forEach(function(t){var li=document.createElement("li");li.textContent=t;ul.appendChild(li)});
-    box.classList.add("show");
+
+  // ---------- helpers ----------
+  function $(id) { return document.getElementById(id); }
+
+  function removeBox() {
+    var old = $(BOX_ID);
+    if (old && old.parentNode) old.parentNode.removeChild(old);
   }
-  function calc(){
-    var w=parseFloat($("w").value),h=parseFloat($("h").value);
-    if(!(w>0)||!(h>0)){$("err").textContent="กรอกน้ำหนักและส่วนสูงเป็นตัวเลขที่มากกว่า 0";$("res").classList.remove("show");return}
-    var kg=imp?w*0.45359237:w, m=imp?h*0.0254:h/100;
-    if(m<0.5||m>2.6||kg<10||kg>500){$("err").textContent="ค่าที่กรอกอยู่นอกช่วงปกติ กรุณาตรวจสอบหน่วยอีกครั้ง";$("res").classList.remove("show");return}
-    $("err").textContent="";
-    var b=kg/(m*m);
-    var k=b<18.5?0:b<23?1:b<25?2:3;
-    $("val").textContent=b.toFixed(1);
-    var c=cats[k];
-    $("cat").textContent=c.n;$("cat").style.background=c.c;
-    $("tip").textContent=c.t;
-    showRisk(b,k);
-    var p=Math.max(0,Math.min(100,(b-15)/(40-15)*100));
-    $("pin").style.left=p+"%";
-    [].forEach.call($("tbl").children,function(r){r.classList.toggle("on",+r.dataset.k===k)});
-    $("res").classList.add("show");
-    addHist({b:b,k:k,w:w,h:h,wu:$("wu").textContent,hu:$("hu").textContent,t:Date.now()});
+
+  function el(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
   }
-  var KEY="bmi-history",MAX=10;
-  function load(){try{var a=JSON.parse(localStorage.getItem(KEY));return Array.isArray(a)?a.slice(0,MAX):[]}catch(e){return []}}
-  function store(){try{localStorage.setItem(KEY,JSON.stringify(hist))}catch(e){}}
-  var hist=load();
-  function fmt(t){try{return new Date(t).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return ""}}
-  function mk(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!=null)n.textContent=txt;return n}
-  function renderHist(){
-    var ul=$("hlist");ul.innerHTML="";
-    $("hcount").textContent=hist.length+"/"+MAX;
-    $("hempty").style.display=hist.length?"none":"block";
-    $("hclear").style.display=hist.length?"":"none";
-    hist.forEach(function(e){
-      if(!cats[e.k])return;
-      var li=document.createElement("li"),d=mk("i","dot"),m=mk("div","hm");
-      d.style.background=cats[e.k].c;
-      m.appendChild(mk("b","",Number(e.b).toFixed(1)+"  "+cats[e.k].n));
-      m.appendChild(mk("small","",e.w+" "+e.wu+" / "+e.h+" "+e.hu+"  "+fmt(e.t)));
-      li.appendChild(d);li.appendChild(m);ul.appendChild(li);
-    });
+
+  // ---------- แสดงผล ----------
+  function render() {
+    var res = $("res"), cat = $("cat"), val = $("val"), tip = $("tip");
+    if (!res || !cat || !val || !tip) return;
+
+    // ยังไม่มีผลลัพธ์ (หรือกดล้างค่า/กรอกผิด) -> เอากล่องออก
+    if (!res.classList.contains("show")) { removeBox(); return; }
+
+    var name = (cat.textContent || "").trim();
+    var bmi = parseFloat(val.textContent);
+    var key = null;
+
+    if (name === "น้ำหนักต่ำกว่าเกณฑ์") key = name;
+    else if (name === "น้ำหนักเกิน") key = name;
+    else if (name === "โรคอ้วน") key = bmi >= 30 ? "อ้วน2" : "อ้วน1";
+
+    // ปกติ หรือหาหมวดไม่เจอ -> ไม่แสดง
+    if (!key || !RISKS[key]) { removeBox(); return; }
+
+    var r = RISKS[key];
+    removeBox();
+
+    var box = el("div");
+    box.id = BOX_ID;
+    box.setAttribute("role", "note");
+    box.style.setProperty("--risk-c", r.color);
+
+    var head = el("div", "rk-head");
+    head.appendChild(el("p", "rk-title", r.title));
+    head.appendChild(el("span", "rk-lv", r.level));
+    box.appendChild(head);
+
+    var ul = el("ul");
+    r.items.forEach(function (t) { ul.appendChild(el("li", "", t)); });
+    box.appendChild(ul);
+
+    box.appendChild(el("p", "rk-note",
+      "เป็นความเสี่ยงโดยรวมจากค่า BMI เท่านั้น ควรตรวจสุขภาพและปรึกษาแพทย์เพื่อประเมินรายบุคคล"));
+
+    tip.parentNode.insertBefore(box, tip.nextSibling);
   }
-  function addHist(e){hist.unshift(e);hist=hist.slice(0,MAX);store();renderHist()}
-  $("hclear").onclick=function(){hist=[];store();renderHist()};
-  renderHist();
-  $("u-metric").onclick=function(){setUnit(false)};
-  $("u-imp").onclick=function(){setUnit(true)};
-  $("calc").onclick=calc;
-  $("reset").onclick=function(){$("w").value="";$("h").value="";clearAll();$("w").focus()};
-  ["w","h"].forEach(function(i){$(i).addEventListener("keydown",function(e){if(e.key==="Enter")calc()})});
+
+  // ---------- เริ่มทำงาน ----------
+  function init() {
+    if (!$("res") || !$("cat") || !$("val") || !$("tip")) return;
+    injectStyle();
+
+    var obs = new MutationObserver(render);
+    var textOpts = { childList: true, characterData: true, subtree: true };
+    obs.observe($("val"), textOpts);
+    obs.observe($("cat"), textOpts);
+    obs.observe($("res"), { attributes: true, attributeFilter: ["class"] });
+
+    render();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
-</script>
-</body>
-</html>
