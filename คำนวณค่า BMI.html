@@ -230,5 +230,67 @@ label{display:block; font-size:.9rem; color:var(--muted); margin:0 0 6px}
   ["w","h"].forEach(function(i){$(i).addEventListener("keydown",function(e){if(e.key==="Enter")calc()})});
 })();
 </script>
+
+<!-- ===== ส่วนเสริม: ระบบโปรไฟล์ (เพิ่มใหม่ ไม่แก้โค้ดเดิมด้านบน) ===== -->
+<style id="profile-addon-css">
+.pf{display:flex; align-items:center; gap:14px; margin-bottom:16px; padding:14px 16px}
+.pf-av{position:relative; flex:0 0 auto; width:68px; height:68px; border-radius:50%; border:2px solid var(--blue); background:var(--field); color:var(--blue); font:inherit; font-size:1.7rem; font-weight:600; padding:0; cursor:pointer; overflow:hidden; display:flex; align-items:center; justify-content:center}
+.pf-av img{width:100%; height:100%; object-fit:cover; display:block}
+.pf-av:focus-visible,.pf-name:focus-visible,.pf-act:focus-visible{outline:3px solid var(--blue-d); outline-offset:2px}
+.pf-main{flex:1; min-width:0}
+.pf-hi{display:block; font-size:.8rem; color:var(--muted)}
+.pf-name{width:100%; border:0; border-bottom:1px dashed var(--line); background:transparent; color:var(--ink); font:inherit; font-size:1.2rem; font-weight:600; padding:2px 0; outline:none}
+.pf-name:focus{border-bottom:1px solid var(--blue)}
+.pf-acts{display:flex; gap:14px; margin-top:4px}
+.pf-act{border:0; background:transparent; color:var(--blue); font:inherit; font-size:.85rem; padding:4px 0; cursor:pointer}
+.pf-act.del{color:var(--muted)}
+</style>
+<script id="profile-addon-js">
+(function(){
+  var KEY="bmi-profile",P={name:"",img:""};
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==="object"){P.name=String(s.name||"").slice(0,20);P.img=(typeof s.img==="string"&&s.img.indexOf("data:image/")===0)?s.img:""}}catch(e){}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}}
+  var app=document.querySelector(".app");if(!app)return;
+  function mk(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+  var box=mk("section","card pf"); box.setAttribute("aria-label","โปรไฟล์");
+  var av=mk("button","pf-av"); av.type="button"; av.setAttribute("aria-label","เปลี่ยนรูปโปรไฟล์");
+  var file=mk("input"); file.type="file"; file.accept="image/*"; file.hidden=true;
+  var main=mk("div","pf-main"), hi=mk("span","pf-hi","โปรไฟล์ของคุณ");
+  var nm=mk("input","pf-name"); nm.type="text"; nm.maxLength=20; nm.placeholder="ตั้งชื่อของคุณ"; nm.setAttribute("aria-label","ชื่อโปรไฟล์"); nm.value=P.name;
+  var acts=mk("div","pf-acts"), chg=mk("button","pf-act","เปลี่ยนรูป"), del=mk("button","pf-act del","ลบรูป");
+  chg.type="button"; del.type="button";
+  acts.appendChild(chg);acts.appendChild(del);
+  main.appendChild(hi);main.appendChild(nm);main.appendChild(acts);
+  box.appendChild(av);box.appendChild(main);box.appendChild(file);
+  app.insertBefore(box,app.firstChild);
+  function render(){
+    av.innerHTML="";
+    if(P.img){var im=mk("img");im.src=P.img;im.alt="รูปโปรไฟล์";av.appendChild(im)}
+    else av.textContent=(P.name.trim().charAt(0)||"👤").toUpperCase();
+    del.style.display=P.img?"":"none";
+    hi.textContent=P.name.trim()?"สวัสดี":"โปรไฟล์ของคุณ";
+  }
+  nm.addEventListener("input",function(){P.name=nm.value.slice(0,20);save();render()});
+  av.onclick=chg.onclick=function(){file.click()};
+  del.onclick=function(){P.img="";save();render()};
+  file.addEventListener("change",function(){
+    var f=file.files&&file.files[0]; file.value=""; if(!f||f.type.indexOf("image/")!==0)return;
+    var r=new FileReader();
+    r.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var S=256,c=document.createElement("canvas");c.width=c.height=S;
+        var m=Math.min(im.width,im.height),sx=(im.width-m)/2,sy=(im.height-m)/2;
+        c.getContext("2d").drawImage(im,sx,sy,m,m,0,0,S,S);
+        try{P.img=c.toDataURL("image/jpeg",0.85)}catch(e){return}
+        save();render();
+      };
+      im.src=r.result;
+    };
+    r.readAsDataURL(f);
+  });
+  render();
+})();
+</script>
 </body>
 </html>
